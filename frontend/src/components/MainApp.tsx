@@ -67,9 +67,9 @@ export default function MainApp() {
   const nextRitualTime = new Date();
   nextRitualTime.setHours(nextRitualTime.getHours() + 2);
 
-  const handlePost = async (content: string) => {
+  const handlePost = async (content: string, isAnonymous: boolean) => {
     try {
-      await apiClient.createPost(content, true);
+      await apiClient.createPost(content, isAnonymous);
       setIsPostModalOpen(false);
       // Reload timeline by triggering re-render
       window.location.reload();
