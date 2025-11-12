@@ -7,19 +7,20 @@ import CurseButton from './CurseButton';
 interface PostModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onPost: (content: string) => void;
+  onPost: (content: string, isAnonymous: boolean) => void;
 }
 
 export default function PostModal({ isOpen, onClose, onPost }: PostModalProps) {
   const [content, setContent] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(true);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const maxLength = 300;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (content.trim()) {
-      onPost(content);
+      onPost(content, isAnonymous);
       setContent('');
+      setIsAnonymous(false); // Reset to default
       onClose();
     }
   };
