@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 interface AuthResponse {
   user: {
@@ -41,8 +41,25 @@ interface User {
   username: string;
   age: number;
   gender: string;
-  curse_style_id: string;
+  curse_style: {
+    id: string;
+    name: string;
+    name_en: string;
+    description: string;
+  };
   points: number;
+  stats: {
+    posts: number;
+    curses: number;
+    days: number;
+  };
+  created_at: string;
+}
+
+interface UserPost {
+  id: string;
+  content: string;
+  curse_count: number;
   created_at: string;
 }
 
@@ -249,7 +266,19 @@ class ApiClient {
 
     return this.handleResponse<User>(response);
   }
+
+  async getUserPosts(offset?: number, limit?: number): Promise<UserPost[]> {
+    const params = new URLSearchParams();
+    if (limit) params.append('limit', limit.toString());
+    if (offset) params.append('offset', offset.toString());
+
+    const response = await fetch(`${API_BASE_URL}/users/me/posts?${params.toString()}`, {
+      headers: this.getAuthHeaders(),
+    });
+
+    return this.handleResponse<UserPost[]>(response);
+  }
 }
 
 export const apiClient = new ApiClient();
-export type { AuthResponse, Post, CurseStyle, User };
+export type { AuthResponse, Post, CurseStyle, User, UserPost };

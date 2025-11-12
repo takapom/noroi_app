@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Timeline from './Timeline';
 import RitualWaiting from './ritual/RitualWaiting';
@@ -9,7 +9,7 @@ import Ranking from './ranking/Ranking';
 import Profile from './profile/Profile';
 import PostModal from './PostModal';
 import Settings from './settings/Settings';
-import { apiClient } from '@/lib/api';
+import { apiClient, User, UserPost } from '@/lib/api';
 
 type TabType = 'timeline' | 'ritual' | 'ranking' | 'profile';
 
@@ -62,6 +62,32 @@ export default function MainApp() {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isRitualActive, setIsRitualActive] = useState(false); // Toggle for testing
   const [showSettings, setShowSettings] = useState(false);
+
+  // User data state
+  const [userProfile, setUserProfile] = useState<User | null>(null);
+  const [userPosts, setUserPosts] = useState<UserPost[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch user data on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const [profile, posts] = await Promise.all([
+          apiClient.getProfile(),
+          apiClient.getUserPosts(),
+        ]);
+
+        setUserProfile(profile);
+        setUserPosts(posts);
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   // Ritual state
   const nextRitualTime = new Date();
@@ -123,16 +149,52 @@ export default function MainApp() {
       case 'ranking':
         return <Ranking rankings={MOCK_RANKINGS} />;
       case 'profile':
-        return showSettings ? (
-          <Settings
-            onBack={() => setShowSettings(false)}
-            onLogout={handleLogout}
-            onDeleteAccount={handleDeleteAccount}
-          />
-        ) : (
+        if (showSettings) {
+          return (
+            <Settings
+              onBack={() => setShowSettings(false)}
+              onLogout={handleLogout}
+              onDeleteAccount={handleDeleteAccount}
+            />
+          );
+        }
+
+        // Convert API data to UserProfile format
+        if (!userProfile) {
+          return (
+            <div className="flex items-center justify-center min-h-screen">
+              <div className="text-bone-500">Loading...</div>
+            </div>
+          );
+        }
+
+        const profileData = {
+          username: `@${userProfile.username}`,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${userProfile.username}`,
+          bio: '深夜に必ず鏡を見てしまう。その度に何かが変わっている気がする。',
+          age: userProfile.age,
+          gender: userProfile.gender === 'male' ? '男性' : userProfile.gender === 'female' ? '女性' : '不明',
+          curseStyle: `${userProfile.curse_style.name}（${userProfile.curse_style.name_en}）`,
+          stats: userProfile.stats,
+        };
+
+        const postsData = userPosts.map(post => ({
+          id: post.id,
+          date: new Date(post.created_at).toLocaleString('ja-JP', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          }).replace(/\//g, '年').replace(/,/, '日 '),
+          content: post.content,
+          curseCount: post.curse_count,
+        }));
+
+        return (
           <Profile
-            user={MOCK_USER_PROFILE}
-            posts={MOCK_USER_POSTS}
+            user={profileData}
+            posts={postsData}
             onSettings={() => setShowSettings(true)}
           />
         );

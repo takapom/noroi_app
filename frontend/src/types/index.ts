@@ -21,8 +21,8 @@ export interface RankingUser {
 
 export interface UserProfile {
   username: string;
-  avatar: string;
-  bio: string;
+  avatar?: string;
+  bio?: string;
   age: number;
   gender: string;
   curseStyle: string;

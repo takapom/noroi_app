@@ -1,0 +1,8 @@
+- `make docker-up|docker-down|docker-logs|docker-build`: manage the API + Postgres stack via docker-compose.
+- `make run`: run API locally (`go run ./cmd/api/main.go`).
+- `make build`: compile binary (`go build -o main ./cmd/api`).
+- `make test`: run Go tests (`go test -v ./...`).
+- `make mod-download|mod-tidy`: manage Go modules.
+- `make migrate-up|migrate-down`: apply/rollback DB migrations inside the compose network.
+- `make migrate-create name=...`: scaffold new migration via `migrate` CLI.
+- `curl http://localhost:8080/...` sequences in `TESTING.md` to exercise API endpoints.
