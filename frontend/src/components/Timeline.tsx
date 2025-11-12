@@ -3,7 +3,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import CurseCard from './CurseCard';
+import { ToastContainer, type ToastType } from './Toast';
 import { apiClient, type Post } from '@/lib/api';
+
+interface ToastMessage {
+  id: string;
+  message: string;
+  type: ToastType;
+}
 
 function formatTimestamp(dateString: string): string {
   const date = new Date(dateString);
@@ -27,15 +34,34 @@ function formatTimestamp(dateString: string): string {
 export default function Timeline() {
   const [posts, setPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
+    loadUserInfo();
     loadPosts();
   }, []);
 
+  const loadUserInfo = async () => {
+    try {
+      const profile = await apiClient.getProfile();
+      setCurrentUserId(profile.id);
+    } catch (err) {
+      console.error('Failed to load user info:', err);
+    }
+  };
+
+  const showToast = (message: string, type: ToastType = 'info') => {
+    const id = Date.now().toString();
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
+
   const loadPosts = async () => {
     setIsLoading(true);
-    setError('');
 
     try {
       const fetchedPosts = await apiClient.getPosts(20, 0);
@@ -43,6 +69,7 @@ export default function Timeline() {
       // Transform backend posts to frontend format
       const transformedPosts = fetchedPosts.map((post: Post) => ({
         id: post.id,
+        user_id: post.user_id,
         username: post.is_anonymous ? '@匿名の呪術師' : `@${post.username}`,
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.user_id}`,
         timestamp: formatTimestamp(post.created_at),
@@ -50,11 +77,12 @@ export default function Timeline() {
         likeCount: post.curse_count,
         commentCount: 0, // TODO: Implement comments later
         isLiked: post.is_cursed_by_me,
+        isOwnPost: currentUserId === post.user_id,
       }));
 
       setPosts(transformedPosts);
     } catch (err) {
-      setError('投稿の読み込みに失敗しました');
+      showToast('投稿の読み込みに失敗しました', 'error');
       console.error('Failed to load posts:', err);
     } finally {
       setIsLoading(false);
@@ -64,6 +92,12 @@ export default function Timeline() {
   const handleLike = async (id: string) => {
     const post = posts.find((p) => p.id === id);
     if (!post) return;
+
+    // Prevent cursing own post
+    if (post.isOwnPost) {
+      showToast('自分の投稿に怨念をつけることはできません', 'warning');
+      return;
+    }
 
     // Optimistic update
     setPosts((prevPosts) =>
@@ -84,7 +118,7 @@ export default function Timeline() {
       } else {
         await apiClient.cursePost(id);
       }
-    } catch (err) {
+    } catch (err: any) {
       // Revert on error
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
@@ -97,12 +131,19 @@ export default function Timeline() {
             : p
         )
       );
+
+      // Show user-friendly error message
+      const errorMessage = err.message || '怨念の操作に失敗しました';
+      showToast(errorMessage, 'error');
       console.error('Failed to update curse:', err);
     }
   };
 
   return (
     <div className="min-h-screen bg-abyss-900">
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+
       {/* Header */}
       <header className="sticky top-0 z-40 bg-abyss-900 border-b-2 border-moonlight-800">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -120,11 +161,6 @@ export default function Timeline() {
 
       {/* Timeline Content */}
       <main className="max-w-4xl mx-auto px-4 py-6">
-        {error && (
-          <div className="mb-4 p-4 bg-bloodstain-900 border border-bloodstain-700 rounded-lg">
-            <p className="font-body text-bloodstain-500 text-center">{error}</p>
-          </div>
-        )}
 
         {isLoading ? (
           <div className="text-center py-12">

@@ -5,7 +5,7 @@
 
 ## 技術スタック
 - **言語**: Go 1.21
-- **データベース**: PostgreSQL 15
+- **データベース**: PostgreSQL 17
 - **アーキテクチャ**: Clean Architecture + DDD
 - **認証**: JWT
 - **コンテナ**: Docker + Docker Compose
@@ -114,6 +114,20 @@ GET /health
 ```bash
 make test
 ```
+
+## トラブルシューティング
+
+### DockerのPostgreSQLバージョン不整合
+
+症状: `database files are incompatible with server` と表示され、`detail: The data directory was initialized by PostgreSQL version 17, which is not compatible with this version 15.14.` のようなログが出てDBコンテナが停止する。
+
+原因: `postgres_data` ボリュームに PostgreSQL 17 で初期化されたデータが残ったまま、より古いPostgreSQLイメージ（例: 15系）を起動すると発生する。コンテナを削除してもボリュームは残るので、バージョンを下げるとこの不整合が起きる。
+
+対処:
+1. 既存データが不要なら `docker compose down -v` でボリュームごと削除し、`docker compose up` で再作成する。
+2. データを保持したい場合は `docker-compose.yml` の `db` サービスの `image` を `postgres:17-alpine`（このリポジトリのデフォルト）など、既存データと同じバージョンに合わせる。
+
+再起動後に `make docker-logs` で正常に起動していることを確認する。
 
 ## ライセンス
 Proprietary

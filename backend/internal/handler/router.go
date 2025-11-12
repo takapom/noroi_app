@@ -24,7 +24,7 @@ func NewRouter(db *sql.DB) *gin.Engine {
 	authUsecase := usecase.NewAuthUsecase(userRepo, curseStyleRepo, jwtManager)
 	postUsecase := usecase.NewPostUsecase(postRepo, curseRepo, userRepo)
 	curseUsecase := usecase.NewCurseUsecase(postRepo, curseRepo)
-	userUsecase := usecase.NewUserUsecase(userRepo, curseStyleRepo)
+	userUsecase := usecase.NewUserUsecase(userRepo, curseStyleRepo, postRepo)
 
 	// Initialize handlers
 	authHandler := NewAuthHandler(authUsecase)
@@ -81,6 +81,7 @@ func NewRouter(db *sql.DB) *gin.Engine {
 			{
 				users.GET("/me", userHandler.GetProfile)
 				users.PUT("/me", userHandler.UpdateProfile)
+				users.GET("/me/posts", userHandler.GetMyPosts)
 			}
 		}
 	}

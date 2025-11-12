@@ -12,6 +12,7 @@ interface CursePost {
   likeCount: number;
   commentCount: number;
   isLiked: boolean;
+  isOwnPost?: boolean;
 }
 
 interface CurseCardProps {
@@ -62,18 +63,21 @@ export default function CurseCard({ post, onLike }: CurseCardProps) {
       {/* Actions */}
       <div className="flex gap-3 pt-3 border-t border-moonlight-800">
         <motion.button
-          onClick={() => onLike(post.id)}
+          onClick={() => !post.isOwnPost && onLike(post.id)}
+          disabled={post.isOwnPost}
           className={`
             px-3 py-1.5 text-sm font-body rounded
             transition-all duration-200
             ${
-              post.isLiked
+              post.isOwnPost
+                ? 'bg-transparent border border-moonlight-800 text-bone-600 cursor-not-allowed opacity-50'
+                : post.isLiked
                 ? 'bg-gradient-to-br from-bloodstain-900 to-abyss-800 border border-bloodstain-700 text-bloodstain-500 shadow-inner'
                 : 'bg-transparent border border-moonlight-600 text-bone-400 hover:border-bloodstain-700 hover:text-bone-200'
             }
           `}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={post.isOwnPost ? {} : { scale: 1.05 }}
+          whileTap={post.isOwnPost ? {} : { scale: 0.95 }}
         >
           🔥 {post.likeCount}
         </motion.button>

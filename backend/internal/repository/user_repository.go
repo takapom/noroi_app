@@ -26,4 +26,8 @@ type UserRepository interface {
 
 	// ExistsByEmail checks if a user with the given email exists
 	ExistsByEmail(ctx context.Context, email value.Email) (bool, error)
+
+	// GetUserStats retrieves statistics for a user
+	// Returns: posts count, total curses received, days since account creation
+	GetUserStats(ctx context.Context, userID uuid.UUID) (posts int, curses int, days int, err error)
 }

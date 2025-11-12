@@ -1,0 +1,5 @@
+- Purpose: Backend API for the "呪癖 (JUHEKI)" application, delivering curse-themed social features via REST. Clean Architecture + DDD focus on modular domain/usecase layers.
+- Tech stack: Go 1.21, PostgreSQL 15, JWT auth, Docker/Docker Compose for runtime. Uses sql migrations in `migrations/`.
+- Structure: `cmd/api` entrypoint, `internal/domain|usecase|repository|infrastructure` for core layers, `pkg` for shared helpers (errors, jwt, validator), `migrations` for db schema scripts.
+- Supporting docs: README describes setup, TESTING.md has curl verification steps, API_DOCUMENTATION.md for endpoints, docker-compose orchestrates API + db + migrations.
+- Target runtime: containerized stack; local dev possible via Go tooling.

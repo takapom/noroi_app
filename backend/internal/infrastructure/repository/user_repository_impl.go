@@ -157,3 +157,24 @@ func (r *userRepository) ExistsByEmail(ctx context.Context, email value.Email) (
 	}
 	return exists, nil
 }
+
+func (r *userRepository) GetUserStats(ctx context.Context, userID uuid.UUID) (posts int, curses int, days int, err error) {
+	query := `
+		SELECT
+			COALESCE(COUNT(DISTINCT p.id), 0) as posts,
+			COALESCE(SUM(p.curse_count), 0) as curses,
+			COALESCE(EXTRACT(DAY FROM NOW() - u.created_at)::int, 0) as days
+		FROM users u
+		LEFT JOIN posts p ON p.user_id = u.id AND p.is_deleted = FALSE
+		WHERE u.id = $1 AND u.is_deleted = FALSE
+		GROUP BY u.created_at
+	`
+	err = r.db.QueryRowContext(ctx, query, userID).Scan(&posts, &curses, &days)
+	if err == sql.ErrNoRows {
+		return 0, 0, 0, errors.ErrUserNotFound
+	}
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("failed to get user stats: %w", err)
+	}
+	return posts, curses, days, nil
+}
