@@ -73,3 +73,21 @@ func (h *UserHandler) GetCurseStyles(c *gin.Context) {
 		"curse_styles": styles,
 	})
 }
+
+// GetMyPosts handles getting the current user's posts
+// GET /users/me/posts
+func (h *UserHandler) GetMyPosts(c *gin.Context) {
+	userID, err := middleware.GetUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	posts, err := h.userUsecase.GetMyPosts(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get posts"})
+		return
+	}
+
+	c.JSON(http.StatusOK, posts)
+}

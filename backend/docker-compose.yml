@@ -1,12 +1,12 @@
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:17-alpine
     container_name: noroi_db
     environment:
       POSTGRES_USER: noroi
       POSTGRES_PASSWORD: noroi_password
       POSTGRES_DB: noroi_db
-      TZ: 'Asia/Tokyo'
+      TZ: "Asia/Tokyo"
     ports:
       - "5433:5432"
     volumes:
@@ -25,7 +25,14 @@ services:
         condition: service_healthy
     volumes:
       - ./migrations:/migrations
-    command: ["-path", "/migrations", "-database", "postgres://noroi:noroi_password@db:5432/noroi_db?sslmode=disable", "up"]
+    command:
+      [
+        "-path",
+        "/migrations",
+        "-database",
+        "postgres://noroi:noroi_password@db:5432/noroi_db?sslmode=disable",
+        "up",
+      ]
     restart: "no"
 
   api:
@@ -45,7 +52,7 @@ services:
       JWT_SECRET: your-secret-key-change-in-production
       PORT: 8080
     ports:
-      - "8081:8080"
+      - "8000:8080"
     restart: unless-stopped
 
 volumes:

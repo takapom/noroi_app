@@ -1,0 +1,6 @@
+- Go code follows Clean Architecture layering: domain entities/value objects kept pure; usecases orchestrate, infrastructure handles adapters.
+- Keep packages under `internal/*` boundary; prefer dependency injection via interfaces in repository layer.
+- Use Go's standard formatting (`gofmt`) and idiomatic naming (MixedCaps exported, lowerCamel internal). Errors wrapped via helpers in `pkg/errors`.
+- Validation handled through `pkg/validator`; JWT concerns isolated in `pkg/jwt`.
+- Configuration managed through `.env`; avoid hardcoding secrets; use struct tags for JSON binding.
+- Tests run with `go test ./...`; prefer table-driven tests.
