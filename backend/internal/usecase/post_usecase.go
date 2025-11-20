@@ -82,6 +82,7 @@ func (uc *PostUsecase) GetTimeline(ctx context.Context, currentUserID uuid.UUID,
 
 	// ========================================
 	// ステップ2: ユニークなcurse_style_idを抽出（メモリ操作のみ）
+	// 例): styleIDs := [A, B, C, D, E] 
 	// ========================================
 	styleIDSet := make(map[uuid.UUID]bool)
 	for _, pwu := range postsWithUser {
@@ -98,14 +99,13 @@ func (uc *PostUsecase) GetTimeline(ctx context.Context, currentUserID uuid.UUID,
 	// ステップ3: 呪癖スタイル情報を並行取得（goroutine使用）
 	// ========================================
 	styleMap := make(map[uuid.UUID]*entity.CurseStyle)
-	var mu sync.Mutex // styleMapへの並行アクセスを保護
+	var mu sync.Mutex 
 
-	// errgroup を使ってgoroutineのエラーハンドリング
 	g, gctx := errgroup.WithContext(ctx)
 
 	// 各呪癖スタイルIDに対してgoroutineを起動
 	for _, styleID := range styleIDs {
-		styleID := styleID // クロージャのキャプチャ対策（重要！）
+		styleID := styleID 
 
 		g.Go(func() error {
 			// DBから呪癖スタイル情報を取得
